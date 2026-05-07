@@ -256,7 +256,13 @@ public class PhantomCamera3D : PhantomCamera
         set => Node3D.Call(MethodName.SetUp, value);
     }
 
-    public Node3D UpTarget
+    public FollowMode3D FollowMode
+    {
+        get => (FollowMode3D)(int)Node.Call(PhantomCamera.MethodName.GetFollowMode);
+        set => Node.Call(PhantomCamera.MethodName.SetFollowMode, (int)value); //test
+    }
+
+    public int CollisionMask
     {
         get => (Node3D)Node3D.Call(MethodName.GetUpTarget);
         set => Node3D.Call(MethodName.SetUpTarget, value);

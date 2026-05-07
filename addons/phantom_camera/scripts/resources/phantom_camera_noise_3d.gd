@@ -35,6 +35,15 @@ extends Resource
 	set = set_noise_seed,
 	get = get_noise_seed
 
+## Override random noise
+@export var curve_control: bool = false:
+	set = set_curve_control,
+	get = get_curve_control
+
+@export var curve: Curve:
+	set = set_curve,
+	get = get_curve
+
 ## Enables noise changes to the [Camera3D]'s rotation.
 @export var rotational_noise: bool = true:
 	set = set_rotational_noise,
@@ -45,6 +54,10 @@ extends Resource
 @export var positional_noise: bool = false:
 	set = set_positional_noise,
 	get = get_positional_noise
+
+@export var line_noise: bool = false:
+	set = set_line_noise,
+	get = get_line_noise
 
 @export_group("Rotational Multiplier")
 ## Multiplies rotational noise amount in the X-axis.[br]
@@ -87,6 +100,18 @@ extends Resource
 	set = set_positional_multiplier_z,
 	get = get_positional_multiplier_z
 
+@export_group("Line Multiplier")
+@export var line_direction: Vector3 = Vector3(0,0,0):
+	set = set_line_direction,
+	get = get_line_direction
+
+
+@export_range(0, 1, 0.001, "or_greater") var line_multiplier: float = 1:
+	set = set_line_multiplier,
+	get = get_line_multiplier
+
+
+
 #endregion
 
 #region Private Variables
@@ -104,6 +129,10 @@ var _noise_positional_multiplier: Vector3 = Vector3(
 	positional_multiplier_y,
 	positional_multiplier_z,
 )
+
+var _noise_line_vector: Vector3 = line_direction
+
+var _noise_line_multiplier: float = line_multiplier
 
 var _trauma: float = 0.0:
 	set(value):
@@ -142,10 +171,17 @@ func _validate_property(property: Dictionary) -> void:
 			"positional_multiplier_z":
 				property.usage = PROPERTY_USAGE_NO_EDITOR
 
+	if not line_noise:
+		match property.name:
+			"line_direction", \
+			"line_multiplier":
+				property.usage = PROPERTY_USAGE_NO_EDITOR
 
 func _get_noise_from_seed(noise_seed: int) -> float:
 	return _noise_algorithm.get_noise_2d(noise_seed, _noise_time) * amplitude
 
+func _get_sample_from_curve(ratio: float) -> float:
+	return curve.sample(ratio) * amplitude
 
 func set_trauma(value: float) -> void:
 	_trauma = value
@@ -168,10 +204,34 @@ func get_noise_transform(delta: float) -> Transform3D:
 
 		if positional_noise:
 			output_position[i] += _noise_positional_multiplier[i] / 10 * \
-			pow(_trauma, 2.0) * _get_noise_from_seed(i + noise_seed)
+			pow(_trauma, 2) * _get_noise_from_seed(i + noise_seed)
 
+		if line_noise:
+			output_position[i] += _noise_line_vector[i] * pow(_trauma, 2) * _noise_line_multiplier/10 * _get_noise_from_seed(noise_seed)
+			
 	return Transform3D(Quaternion.from_euler(output_rotation), output_position)
 
+func get_curved_transform(delta: float, total_time: float) -> Transform3D:
+	var output_rotation: Vector3 = Vector3.ZERO
+	var output_position: Vector3 = Vector3.ZERO
+	var ratio: float = fmod(_noise_time/total_time,1.0)
+	_noise_time += delta
+	_trauma = maxf(_trauma, 0.0)
+
+	for i in 3:
+		if rotational_noise:
+			output_rotation[i] = deg_to_rad(
+				_noise_rotational_multiplier[i] * pow(_trauma, 2) * _get_sample_from_curve(ratio)
+			)
+
+		if positional_noise:
+			output_position[i] += _noise_positional_multiplier[i] / 10 * \
+			pow(_trauma, 2) * _get_sample_from_curve(ratio)
+
+		if line_noise:
+			output_position[i] += _noise_line_vector[i] * pow(_trauma, 2) * _noise_line_multiplier/10 * _get_sample_from_curve(ratio)
+			
+	return Transform3D(Quaternion.from_euler(output_rotation), output_position)
 
 func reset_noise_time() -> void:
 	_noise_time = 0.0
@@ -218,6 +278,17 @@ func set_noise_seed(value: int) -> void:
 func get_noise_seed() -> int:
 	return noise_seed
 
+func set_curve_control(value: bool) -> void:
+	curve_control = value
+
+func get_curve_control() -> bool:
+	return curve_control
+
+func set_curve(value: Curve) -> void:
+	curve = value
+
+func get_curve() -> Curve:
+	return curve
 
 ## Sets the [member positional_noise] value.
 func set_positional_noise(value: bool) -> void:
@@ -243,6 +314,14 @@ func get_rotational_noise() -> bool:
 func set_positional_multiplier_x(value: float) -> void:
 	positional_multiplier_x = value
 	_noise_positional_multiplier.x = value
+
+func set_line_noise(value:bool) -> void:
+	line_noise = value
+	notify_property_list_changed()
+	pass
+
+func get_line_noise() -> bool:
+	return line_noise
 
 ## Returns the [member positional_multiplier_x] value.
 func get_positional_multiplier_x() -> float:
@@ -298,4 +377,19 @@ func set_rotational_multiplier_z(value: float) -> void:
 func get_rotational_multiplier_z() -> float:
 	return rotational_multiplier_z
 
+func set_line_multiplier(value:float) -> void:
+	line_multiplier = value
+	_noise_line_multiplier = value
+	pass
+
+func get_line_multiplier() -> float:
+	return line_multiplier
+
+func set_line_direction(value:Vector3) -> void:
+	line_direction = value
+	_noise_line_vector = value.normalized()
+	pass
+
+func get_line_direction() -> Vector3:
+	return line_direction
 	#endregion
