@@ -2058,6 +2058,8 @@ func set_host_layers_value(layer: int, value: bool) -> void:
 func get_host_layers() -> int:
 	return host_layers
 
+func set_follow_mode(value: int) -> void:
+	follow_mode = value
 
 ## Gets the current follow mode as an enum int based on [member FollowMode] enum.[br]
 ## [b]Note:[/b] Setting [member follow_mode] has purposely not been added.

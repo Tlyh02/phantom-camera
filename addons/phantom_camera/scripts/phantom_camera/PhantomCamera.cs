@@ -210,6 +210,7 @@ public abstract class PhantomCamera
         public static readonly StringName SetNoiseEmitterLayer = new("set_noise_emitter_layer");
 
         public static readonly StringName EmitNoise = new("emit_noise");
+        public static StringName SetFollowMode = new("set_follow_mode"); //test:2026年1月9日
     }
 
     public static class PropertyName
