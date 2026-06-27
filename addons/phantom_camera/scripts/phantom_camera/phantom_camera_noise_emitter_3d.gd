@@ -152,7 +152,7 @@ func _process(delta: float) -> void:
 			_elasped_play_time = 0
 			_decay_countdown = 0
 
-	_noise_output = noise.get_noise_transform(delta)
+	_noise_output = noise.get_noise_transform(delta) if not noise.curve_control else noise.get_curved_transform(delta,growth_time + duration + decay_time)
 	_phantom_camera_manager.noise_3d_emitted.emit(_noise_output, noise_emitter_layer)
 
 
