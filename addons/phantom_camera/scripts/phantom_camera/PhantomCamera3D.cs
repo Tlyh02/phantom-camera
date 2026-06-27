@@ -115,8 +115,11 @@ public class PhantomCamera3D : PhantomCamera
     public void AppendFollowTargetArray(Node3D[] targets) => Node3D.Call(PhantomCamera.MethodName.AppendFollowTargetsArray, targets);
     public void EraseFollowTarget(Node3D target) => Node3D.Call(PhantomCamera.MethodName.EraseFollowTargets, target);
 
-    public FollowMode3D FollowMode => (FollowMode3D)(int)Node.Call(PhantomCamera.MethodName.GetFollowMode);
-
+    public FollowMode3D FollowMode
+    {
+        get => (FollowMode3D)(int)Node.Call(PhantomCamera.MethodName.GetFollowMode);
+        set => Node.Call(PhantomCamera.MethodName.SetFollowMode, (int)value); //test
+    }
     public Path3D FollowPath
     {
         get => (Path3D)Node3D.Call(PhantomCamera.MethodName.GetFollowPath);
@@ -255,14 +258,9 @@ public class PhantomCamera3D : PhantomCamera
         get => (Vector3)Node3D.Call(MethodName.GetUp);
         set => Node3D.Call(MethodName.SetUp, value);
     }
+    
 
-    public FollowMode3D FollowMode
-    {
-        get => (FollowMode3D)(int)Node.Call(PhantomCamera.MethodName.GetFollowMode);
-        set => Node.Call(PhantomCamera.MethodName.SetFollowMode, (int)value); //test
-    }
-
-    public int CollisionMask
+    public Node3D UpTarget
     {
         get => (Node3D)Node3D.Call(MethodName.GetUpTarget);
         set => Node3D.Call(MethodName.SetUpTarget, value);
